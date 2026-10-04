@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="screenshots/orggraph-banner.png" width="100%" alt="OrgGraph">
+</p>
+
 # OrgGraph
 
 **Framework OSINT passif de collecte, corrélation et visualisation**
