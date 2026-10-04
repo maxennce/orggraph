@@ -2,35 +2,41 @@
 
 **Passive OSINT Intelligence & Correlation Framework**
 
-OrgGraph est un outil OSINT passif permettant de cartographier l'écosystème public d'une organisation à partir d'un simple nom de domaine.
+OrgGraph est un outil OSINT passif qui cartographie l'écosystème public d'une organisation à partir d'un nom de domaine.
 
-Il collecte plusieurs signaux publics, les normalise en entités et relations, puis les corrèle afin de construire une vue structurée de l'infrastructure observée.
+Il collecte plusieurs signaux publics, les normalise en entités et relations, puis les corrèle afin de produire une vue structurée et explicable de l'infrastructure observée.
 
-```text
-target domain
-     │
-     ├── DNS
-     ├── Certificate Transparency
-     ├── RDAP
-     └── HTTP
-           │
-           ▼
-      Observations
-           │
-           ▼
-        Entities
-           │
-           ▼
-      Relationships
-           │
-           ▼
-         Scoring
-           │
-           ▼
-     SQLite / Graph
-```
+> OrgGraph est conçu pour la recherche OSINT, la veille et la reconnaissance défensive. Il ne réalise pas de brute-force, d'exploitation de vulnérabilités, de contournement d'authentification ou de scan réseau agressif.
 
-OrgGraph conserve également l'historique des scans afin de comparer les changements observés au fil du temps.
+---
+
+## Screenshots
+
+### CLI
+
+#### Help
+
+<p align="center">
+  <img src="screenshots/cli-help.png" width="100%" alt="OrgGraph CLI Help">
+</p>
+
+#### Passive scan
+
+<p align="center">
+  <img src="screenshots/scan.png" width="100%" alt="OrgGraph Passive Scan">
+</p>
+
+### Interactive graph
+
+<p align="center">
+  <img src="screenshots/graph.png" width="100%" alt="OrgGraph Interactive Graph">
+</p>
+
+### Entities & evidence
+
+<p align="center">
+  <img src="screenshots/entities.png" width="100%" alt="OrgGraph Entities and Evidence">
+</p>
 
 ---
 
@@ -41,7 +47,7 @@ OrgGraph conserve également l'historique des scans afin de comparer les changem
 - Certificate Transparency discovery
 - RDAP lookup
 - Basic HTTP intelligence
-- Entity normalization
+- Entity normalization and deduplication
 - Relationship correlation
 - Explainable confidence scoring
 - Scan history
@@ -51,13 +57,13 @@ OrgGraph conserve également l'historique des scans afin de comparer les changem
 - Interactive local web interface
 - Graph visualization
 - Machine-readable JSON mode
-- Individual collectors can fail without stopping the scan
+- Collector failures do not stop the whole scan
 
 ---
 
 ## Data sources
 
-OrgGraph utilise uniquement des sources et informations publiquement accessibles.
+OrgGraph utilise uniquement des informations accessibles publiquement.
 
 ### DNS
 
@@ -99,21 +105,15 @@ redirects
 security headers
 ```
 
-OrgGraph ne réalise pas de bruteforce de chemins ou de crawling massif.
+OrgGraph ne réalise pas de brute-force de chemins ni de crawling massif.
 
 ---
 
 ## How it works
 
-Chaque élément collecté est d'abord enregistré comme une **observation**.
+Chaque information collectée est d'abord enregistrée comme une **observation** avec sa provenance.
 
-Exemple :
-
-```text
-api.example.com
-```
-
-peut être observé indépendamment par :
+Par exemple, `api.example.com` peut être observé indépendamment par :
 
 ```text
 Certificate Transparency
@@ -121,7 +121,7 @@ DNS
 HTTP
 ```
 
-OrgGraph fusionne ensuite les observations correspondant à la même ressource afin de créer une entité unique.
+OrgGraph fusionne ensuite les observations correspondant à la même ressource afin de créer une entité unique :
 
 ```text
 api.example.com
@@ -132,7 +132,7 @@ Evidence
 └── HTTP
 ```
 
-Les relations entre entités peuvent ensuite être construites :
+Les relations entre entités permettent ensuite de reconstruire le graphe :
 
 ```text
 example.com
@@ -152,7 +152,7 @@ example.com
 
 ## Explainable scoring
 
-OrgGraph utilise un système de score permettant d'indiquer la force des signaux associés à une entité ou une relation.
+OrgGraph attribue un score de confiance interne aux entités et relations en fonction des signaux observés.
 
 Exemple :
 
@@ -169,17 +169,13 @@ Evidence
 +10 HTTP confirmation
 ```
 
-Ce score est un **score de confiance interne et explicable**.
+Ce score est **explicable**, mais ne doit pas être interprété comme une probabilité scientifique.
 
-Il ne doit pas être interprété comme une probabilité scientifique.
-
-La commande :
+La commande suivante affiche les éléments ayant contribué au score :
 
 ```bash
 python3 orggraph.py explain ENTITY_ID
 ```
-
-permet d'afficher les éléments ayant contribué au score.
 
 ---
 
@@ -190,38 +186,33 @@ permet d'afficher les éléments ayant contribué au score.
 - Python 3.10+
 - Linux/macOS recommandé
 
-Clone the repository:
+Clonez le dépôt :
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/orggraph.git
+git clone https://github.com/maxennce/orggraph
 cd orggraph
 ```
 
-Create a virtual environment:
+Créez un environnement virtuel :
 
 ```bash
 python3 -m venv .venv
-```
-
-Activate it:
-
-```bash
 source .venv/bin/activate
 ```
 
-Install dependencies:
+Installez les dépendances :
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-Run the self-test:
+Lancez les tests internes :
 
 ```bash
 python orggraph.py selftest
 ```
 
-Sur Debian/Ubuntu, si la création du virtual environment échoue :
+Sur Debian/Ubuntu, si `python3 -m venv` échoue :
 
 ```bash
 sudo apt install python3-venv
@@ -232,42 +223,6 @@ sudo apt install python3-venv
 ## Usage
 
 ### Scan a domain
-
-```bash
-python orggraph.py scan example.com
-```
-
-Example output:
-
-```text
-Target: example.com
-
-Collectors
-────────────────────────────────────
-
-✓ DNS
-✓ Certificate Transparency
-✓ RDAP
-✓ HTTP
-
-Correlating observations...
-Scoring relationships...
-Saving scan...
-
-────────────────────────────────────
-
-Entities                     42
-Relationships                67
-New findings                 42
-
-Scan ID: xxxxxxxx
-```
-
----
-
-## Commands
-
-### Scan
 
 ```bash
 python orggraph.py scan example.com
@@ -315,7 +270,7 @@ python orggraph.py export example.com
 python orggraph.py ui
 ```
 
-Then open:
+Puis ouvrez :
 
 ```text
 http://127.0.0.1:8765
@@ -344,8 +299,6 @@ python orggraph.py scan example.com --no-banner
 ```
 
 ### JSON output
-
-Useful for automation:
 
 ```bash
 python orggraph.py scan example.com --json
@@ -379,23 +332,21 @@ python orggraph.py entities example.com --type Subdomain --min-score 60
 
 ## Scan history
 
-Every scan is stored locally.
+Chaque scan est conservé localement.
 
-Running:
+En exécutant plusieurs fois :
 
 ```bash
 python orggraph.py scan example.com
 ```
 
-multiple times allows OrgGraph to compare observations over time.
-
-Then:
+OrgGraph peut comparer les observations dans le temps.
 
 ```bash
 python orggraph.py diff example.com
 ```
 
-can show changes such as:
+Exemple :
 
 ```text
 NEW
@@ -414,21 +365,17 @@ NOT OBSERVED
 - old-api.example.com
 ```
 
-`NOT OBSERVED` does **not** necessarily mean that the resource has been deleted.
-
-It only means that OrgGraph did not observe it during the latest scan.
+`NOT OBSERVED` ne signifie pas forcément que la ressource a été supprimée. Cela signifie uniquement qu'OrgGraph ne l'a pas observée pendant le dernier scan.
 
 ---
 
 ## Timeline
 
-The timeline command reconstructs when entities were first or last observed.
-
 ```bash
 python orggraph.py timeline example.com
 ```
 
-Example:
+Exemple :
 
 ```text
 2026-09-01
@@ -449,38 +396,36 @@ Example:
 
 ## Web interface
 
-OrgGraph includes a local web interface.
-
-Start it with:
+OrgGraph inclut une interface web locale accessible avec :
 
 ```bash
 python orggraph.py ui
 ```
 
-Default address:
+Adresse par défaut :
 
 ```text
 http://127.0.0.1:8765
 ```
 
-The interface provides access to:
+L'interface permet notamment d'explorer :
 
-- target overview
-- entities
-- relationships
-- interactive graph
-- scans
-- timeline
-- changes
-- evidence and scores
+- l'overview de la cible
+- les entités
+- les relations
+- le graphe interactif
+- les scans
+- la timeline
+- les changements
+- les preuves et scores
 
-The graph visualization uses Cytoscape.js loaded from a CDN.
+Le graphe utilise Cytoscape.js chargé depuis un CDN.
 
 ---
 
 ## Local files
 
-OrgGraph creates several files locally while it runs.
+OrgGraph crée plusieurs fichiers pendant son fonctionnement :
 
 ```text
 orggraph.db
@@ -490,25 +435,19 @@ exports/
 
 ### `orggraph.db`
 
-SQLite database containing scan history, observations, entities and relationships.
+Base SQLite contenant l'historique des scans, observations, entités et relations.
 
 ### `config.json`
 
-Local configuration such as:
-
-```text
-timeouts
-concurrency
-user-agent
-```
+Configuration locale : timeouts, concurrence, User-Agent, etc.
 
 ### `exports/`
 
-Generated JSON exports.
+Exports JSON générés par l'outil.
 
-These files are intentionally excluded from the Git repository.
+Ces fichiers sont exclus du dépôt Git.
 
-A safe example configuration is provided as:
+Un exemple de configuration sans secret est fourni :
 
 ```text
 config.example.json
@@ -518,85 +457,70 @@ config.example.json
 
 ## Repository structure
 
-The project intentionally remains mostly single-file.
-
 ```text
 orggraph/
-│
+├── .gitignore
+├── LICENSE
+├── README.md
+├── config.example.json
 ├── orggraph.py
 ├── pyproject.toml
 ├── requirements.txt
-├── config.example.json
-├── README.md
-└── .gitignore
+└── screenshots/
+    ├── cli-help.png
+    ├── scan.png
+    ├── graph.png
+    └── entities.png
 ```
 
-Runtime files such as the database, exports, local configuration, build artifacts and virtual environments should not be committed.
+Les fichiers runtime (`orggraph.db`, `config.json`, `exports/`), les environnements virtuels et les artefacts de build ne doivent pas être commités.
 
 ---
 
 ## Passive by design
 
-OrgGraph is designed as a passive OSINT and defensive intelligence tool.
+OrgGraph n'effectue pas intentionnellement :
 
-It does **not** intentionally perform:
+- de scan de ports
+- d'attaque par identifiants
+- de brute-force de mots de passe
+- de contournement d'authentification
+- d'exploitation de vulnérabilités
+- d'énumération agressive d'endpoints
+- d'accès à des ressources privées
+- de scan réseau intrusif
 
-- port scanning
-- credential attacks
-- password bruteforce
-- authentication bypass
-- vulnerability exploitation
-- aggressive endpoint enumeration
-- private resource access
-- intrusive network scanning
-
-A failed source does not cause OrgGraph to fabricate results.
-
-If a collector is unavailable or rate-limited, the scan continues with the remaining sources.
+Si une source échoue ou est rate-limitée, OrgGraph continue avec les autres collecteurs et n'invente pas de résultats.
 
 ---
 
 ## Limitations
 
-Public OSINT data can be:
+Les données OSINT publiques peuvent être :
 
-- incomplete
-- outdated
-- temporarily unavailable
-- misleading
-- hosted on shared infrastructure
+- incomplètes
+- obsolètes
+- temporairement indisponibles
+- trompeuses
+- liées à une infrastructure mutualisée
 
-A relationship discovered by OrgGraph should therefore be treated as an analytical signal, not automatically as proof of ownership.
+Une relation découverte par OrgGraph doit donc être considérée comme un **signal analytique**, et non automatiquement comme une preuve de propriété.
 
-Certificate Transparency services such as `crt.sh` can also occasionally be slow or unavailable.
+`crt.sh` peut également être lent ou temporairement indisponible.
 
 ---
 
 ## Responsible use
 
-Use OrgGraph only for legitimate OSINT, defensive security, research, asset discovery and systems for which you are authorized to perform reconnaissance.
+Utilisez OrgGraph uniquement pour des usages légitimes : OSINT, recherche, sécurité défensive, asset discovery et reconnaissance de systèmes pour lesquels vous disposez des autorisations nécessaires.
 
-The user is responsible for complying with applicable laws, service terms and authorization requirements.
-
----
-
-## License
-
-Add the license applicable to your project here.
-
-For an open-source security tool, a common choice is:
-
-```text
-MIT License
-```
-
-but choose the license that matches how you want others to use and redistribute the project.
+L'utilisateur reste responsable du respect des lois applicables, des conditions d'utilisation des services interrogés et des autorisations nécessaires.
 
 ---
 
 ## Author
 
-Created by **maxennce**
+Created by **@maxennce**
 
 X / Twitter:
 
