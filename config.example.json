@@ -1,0 +1,12 @@
+{
+  "request_timeout": 10.0,
+  "ct_timeout": 45.0,
+  "max_concurrency": 5,
+  "dns_concurrency": 10,
+  "max_retries": 2,
+  "user_agent": "OrgGraph/0.1.0 Passive-OSINT",
+  "max_hostnames": 500,
+  "http_max_hosts": 20,
+  "ui_host": "127.0.0.1",
+  "ui_port": 8765
+}

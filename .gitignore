@@ -1,0 +1,30 @@
+# Virtual environments
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Local OrgGraph data
+orggraph.db
+config.json
+exports/
+
+# Secrets / environment
+.env
+.env.*
+*.key
+*.pem
+
+# Logs
+*.log
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+
